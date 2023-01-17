@@ -100,10 +100,7 @@ WikiNamespace = Union[Namespace, int]
 
 def namespace2int(namespace: WikiNamespace) -> int:
     """Converts namespace into integer"""
-    if isinstance(namespace, Namespace):
-        return namespace.value
-
-    return namespace
+    return namespace.value if isinstance(namespace, Namespace) else namespace
 
 
 RE_SECTION = {
@@ -148,7 +145,7 @@ class Wikipedia:
 
         self.language = language.strip().lower()
         self.extract_format = extract_format
-        default_headers = dict() if headers is None else headers
+        default_headers = {} if headers is None else headers
         default_headers.setdefault(
             "User-Agent",
             "Wikipedia-API (https://github.com/martin-majlis/Wikipedia-API)",
@@ -256,9 +253,7 @@ class Wikipedia:
             params["explaintext"] = 1
             params["exsectionformat"] = "wiki"
 
-        used_params = kwargs
-        used_params.update(params)
-
+        used_params = kwargs | params
         raw = self._query(page, used_params)
         self._common_attributes(raw["query"], page)
         pages = raw["query"]["pages"]
@@ -327,9 +322,7 @@ class Wikipedia:
             "llprop": "url",
         }
 
-        used_params = kwargs
-        used_params.update(params)
-
+        used_params = kwargs | params
         raw = self._query(page, used_params)
         self._common_attributes(raw["query"], page)
         pages = raw["query"]["pages"]
@@ -361,9 +354,7 @@ class Wikipedia:
             "pllimit": 500,
         }
 
-        used_params = kwargs
-        used_params.update(params)
-
+        used_params = kwargs | params
         raw = self._query(page, used_params)
         self._common_attributes(raw["query"], page)
         pages = raw["query"]["pages"]
@@ -401,9 +392,7 @@ class Wikipedia:
             "bllimit": 500,
         }
 
-        used_params = kwargs
-        used_params.update(params)
-
+        used_params = kwargs | params
         raw = self._query(page, used_params)
 
         self._common_attributes(raw["query"], page)
@@ -434,9 +423,7 @@ class Wikipedia:
             "cllimit": 500,
         }
 
-        used_params = kwargs
-        used_params.update(params)
-
+        used_params = kwargs | params
         raw = self._query(page, used_params)
         self._common_attributes(raw["query"], page)
         pages = raw["query"]["pages"]
@@ -467,9 +454,7 @@ class Wikipedia:
             "cmlimit": 500,
         }
 
-        used_params = kwargs
-        used_params.update(params)
-
+        used_params = kwargs | params
         raw = self._query(page, used_params)
 
         self._common_attributes(raw["query"], page)
@@ -483,10 +468,11 @@ class Wikipedia:
 
     def _query(self, page: "WikipediaPage", params: Dict[str, Any]):
         """Queries Wikimedia API to fetch content."""
-        base_url = "https://" + page.language + ".wikipedia.org/w/api.php"
+        base_url = f"https://{page.language}.wikipedia.org/w/api.php"
         log.info(
             "Request URL: %s",
-            base_url + "?" + "&".join([k + "=" + str(v) for k, v in params.items()]),
+            f"{base_url}?"
+            + "&".join([f"{k}={str(v)}" for k, v in params.items()]),
         )
         params["format"] = "json"
         params["redirects"] = 1
@@ -505,8 +491,8 @@ class Wikipedia:
         prev_pos = 0
 
         for match in re.finditer(RE_SECTION[self.extract_format], extract["extract"]):
-            if len(page._section_mapping) == 0:
-                page._summary = extract["extract"][0 : match.start()].strip()
+            if not page._section_mapping:
+                page._summary = extract["extract"][:match.start()].strip()
             elif section is not None:
                 section._text = (extract["extract"][prev_pos : match.start()]).strip()
 
@@ -514,15 +500,13 @@ class Wikipedia:
             sec_level = section.level + 1
 
             if sec_level > len(section_stack):
-                section_stack.append(section)
+                pass
             elif sec_level == len(section_stack):
                 section_stack.pop()
-                section_stack.append(section)
             else:
                 for _ in range(len(section_stack) - sec_level + 1):
                     section_stack.pop()
-                section_stack.append(section)
-
+            section_stack.append(section)
             section_stack[len(section_stack) - 2]._section.append(section)
             # section_stack[sec_level - 1]._section.append(section)
 
@@ -549,8 +533,7 @@ class Wikipedia:
             sec_title = match.group(5).strip()
             sec_level = int(match.group(1).strip())
 
-        section = WikipediaPageSection(self, sec_title, sec_level - 1)
-        return section
+        return WikipediaPageSection(self, sec_title, sec_level - 1)
 
     def _build_info(self, extract, page: "WikipediaPage") -> "WikipediaPage":
         """Builds page from API call info."""
@@ -711,8 +694,7 @@ class WikipediaPageSection:
         :param title: title of the subsection
         :return: subsection if it exists
         """
-        sections = [s for s in self._section if s.title == title]
-        if sections:
+        if sections := [s for s in self._section if s.title == title]:
             return sections[-1]
         return None
 
@@ -872,7 +854,7 @@ class WikipediaPage:
 
         :return: if current page existst or not
         """
-        return bool(self.pageid != -1)
+        return self.pageid != -1
 
     @property
     def summary(self) -> str:
@@ -908,10 +890,7 @@ class WikipediaPage:
         """
         if not self._called["extracts"]:
             self._fetch("extracts")
-        sections = self._section_mapping.get(title)
-        if sections:
-            return sections[-1]
-        return None
+        return sections[-1] if (sections := self._section_mapping.get(title)) else None
 
     def sections_by_title(
         self,
@@ -926,9 +905,7 @@ class WikipediaPage:
         if not self._called["extracts"]:
             self._fetch("extracts")
         sections = self._section_mapping.get(title)
-        if sections is None:
-            return []
-        return sections
+        return [] if sections is None else sections
 
     @property
     def text(self) -> str:

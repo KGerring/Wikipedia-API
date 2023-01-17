@@ -35,7 +35,7 @@ class TestWikiFormatExtracts(unittest.TestCase):
         page = self.wiki.page('Test_1')
         self.assertEqual(
             list(map(lambda s: s.title, page.sections)),
-            ['Section ' + str(i + 1) for i in range(5)]
+            [f'Section {str(i + 1)}' for i in range(5)],
         )
 
     def test_subsection_by_title(self):

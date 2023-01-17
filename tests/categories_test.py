@@ -18,7 +18,7 @@ class TestCategories(unittest.TestCase):
         page = self.wiki.page('Test_1')
         self.assertEqual(
             list(sorted(map(lambda s: s.title, page.categories.values()))),
-            ['Category:C' + str(i + 1) for i in range(3)]
+            [f'Category:C{str(i + 1)}' for i in range(3)],
         )
 
     def test_categories_nss(self):

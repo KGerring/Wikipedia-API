@@ -2,11 +2,8 @@
 # flake8: noqa
 
 def wikipedia_api_request(page, params):
-    query = ""
-    for k in sorted(params.keys()):
-        query += k + "=" + str(params[k]) + "&"
-
-    return _MOCK_DATA[page.language + ":" + query]
+    query = "".join(f"{k}={str(params[k])}&" for k in sorted(params.keys()))
+    return _MOCK_DATA[f"{page.language}:{query}"]
 
 
 _MOCK_DATA = {

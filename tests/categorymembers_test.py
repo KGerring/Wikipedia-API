@@ -17,10 +17,8 @@ class TestCategoryMembers(unittest.TestCase):
     def test_links_single_page_titles(self):
         page = self.wiki.page('Category:C1')
         self.assertEqual(
-            list(
-                sorted(map(lambda s: s.title, page.categorymembers.values()))
-            ),
-            ['Title - ' + str(i + 1) for i in range(3)]
+            list(sorted(map(lambda s: s.title, page.categorymembers.values()))),
+            [f'Title - {str(i + 1)}' for i in range(3)],
         )
 
     def test_links_multi_page_count(self):
@@ -30,8 +28,6 @@ class TestCategoryMembers(unittest.TestCase):
     def test_links_multi_page_titles(self):
         page = self.wiki.page('Category:C2')
         self.assertEqual(
-            list(
-                sorted(map(lambda s: s.title, page.categorymembers.values()))
-            ),
-            ['Title - ' + str(i + 1) for i in range(5)]
+            list(sorted(map(lambda s: s.title, page.categorymembers.values()))),
+            [f'Title - {str(i + 1)}' for i in range(5)],
         )

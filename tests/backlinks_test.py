@@ -22,7 +22,7 @@ class TestBackLinks(unittest.TestCase):
         page = self.wiki.page('Test_1')
         self.assertEqual(
             list(sorted(map(lambda s: s.title, page.backlinks.values()))),
-            ['Title - ' + str(i + 1) for i in range(3)]
+            [f'Title - {str(i + 1)}' for i in range(3)],
         )
 
     def test_backlinks_multi_page_count(self):
@@ -33,5 +33,5 @@ class TestBackLinks(unittest.TestCase):
         page = self.wiki.page('Test_2')
         self.assertEqual(
             list(sorted(map(lambda s: s.title, page.backlinks.values()))),
-            ['Title - ' + str(i + 1) for i in range(5)]
+            [f'Title - {str(i + 1)}' for i in range(5)],
         )
